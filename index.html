@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#F3EEE6">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Emoções">
+  <title>Diário de Emoções</title>
+  <link rel="stylesheet" href="./style.css">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/png" href="./icons/icon-192.png">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+</head>
+<body>
+  <main id="conteudo">
+    <p id="aviso-armazenamento" class="aviso" role="alert" hidden></p>
+
+    <section id="vista-hoje" class="vista" data-vista="hoje">
+      <header class="cabecalho">
+        <h1 tabindex="-1">Diário de Emoções</h1>
+        <p class="subtitulo">Um momento para ti.</p>
+        <p id="data-visivel" class="data"></p>
+      </header>
+
+      <div id="banner-edicao" class="banner" hidden>
+        <p>Estás a editar este dia.</p>
+        <button type="button" id="voltar-hoje">Voltar a hoje</button>
+      </div>
+
+      <h2 id="pergunta">Como te sentiste hoje?</h2>
+      <p class="apoio">Seleciona as emoções que fizeram parte do teu dia.</p>
+
+      <section class="grupo" aria-labelledby="titulo-positivas">
+        <h3 id="titulo-positivas" class="grupo-titulo">Emoções positivas</h3>
+        <div id="chips-positivas" class="chips"></div>
+      </section>
+
+      <section class="grupo" aria-labelledby="titulo-dificeis">
+        <h3 id="titulo-dificeis" class="grupo-titulo grupo-titulo-dificil">Emoções difíceis</h3>
+        <div id="chips-dificeis" class="chips"></div>
+      </section>
+
+      <div class="campo-notas">
+        <label for="notas">Queres guardar algum pensamento sobre o dia?</label>
+        <textarea
+          id="notas"
+          rows="4"
+          placeholder="Escreve aqui, se te apetecer..."
+          autocomplete="off"
+          spellcheck="true"
+        ></textarea>
+      </div>
+
+      <p id="mensagem-guardar" class="mensagem-guardar" role="alert" hidden></p>
+      <button type="button" id="guardar" class="botao-principal">Guardar o meu dia</button>
+    </section>
+
+    <section id="vista-calendario" class="vista" data-vista="calendario" hidden>
+      <header class="cabecalho">
+        <h1 tabindex="-1">Os meus dias</h1>
+      </header>
+
+      <div class="cartao">
+        <div class="mes-nav">
+          <button type="button" id="mes-anterior" aria-label="Mês anterior">
+            <svg viewBox="0 0 24 24" aria-hidden="true" width="22" height="22">
+              <path d="M14.5 6.5 9 12l5.5 5.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+          </button>
+          <h2 id="titulo-mes"></h2>
+          <button type="button" id="mes-seguinte" aria-label="Mês seguinte">
+            <svg viewBox="0 0 24 24" aria-hidden="true" width="22" height="22">
+              <path d="M9.5 6.5 15 12l-5.5 5.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="semana" aria-hidden="true">
+          <span>Seg</span>
+          <span>Ter</span>
+          <span>Qua</span>
+          <span>Qui</span>
+          <span>Sex</span>
+          <span>Sáb</span>
+          <span>Dom</span>
+        </div>
+        <div id="grelha" class="grelha" role="group"></div>
+      </div>
+
+      <div id="detalhe" class="cartao detalhe" aria-live="polite"></div>
+    </section>
+
+    <section id="vista-definicoes" class="vista" data-vista="definicoes" hidden>
+      <header class="cabecalho">
+        <h1 tabindex="-1">Definições</h1>
+      </header>
+
+      <section class="cartao definicao" aria-labelledby="titulo-exportar">
+        <h2 id="titulo-exportar">Exportar dados</h2>
+        <p>Guarda uma cópia do diário num ficheiro JSON.</p>
+        <button type="button" id="exportar" class="botao-secundario">Exportar o meu diário</button>
+      </section>
+
+      <section class="cartao definicao" aria-labelledby="titulo-importar">
+        <h2 id="titulo-importar">Importar dados</h2>
+        <p>Substitui o diário deste dispositivo por um ficheiro JSON.</p>
+        <button type="button" id="importar" class="botao-secundario">Importar diário</button>
+        <input id="ficheiro-importar" class="ficheiro" type="file" accept="application/json,.json">
+      </section>
+
+      <section class="cartao definicao" aria-labelledby="titulo-info">
+        <h2 id="titulo-info">Informação</h2>
+        <p class="nome-app">Diário de Emoções</p>
+        <p class="versao">Versão 1.0</p>
+        <p>Um espaço pessoal para reconhecer e guardar as emoções de cada dia.</p>
+        <p class="nota-segura">Os teus registos são guardados apenas neste dispositivo. Exporta regularmente o teu diário para manteres uma cópia de segurança.</p>
+      </section>
+    </section>
+  </main>
+
+  <nav class="barra-nav" aria-label="Navegação principal">
+    <button type="button" data-vista="hoje" aria-controls="vista-hoje" aria-current="page">
+      <span class="icone" aria-hidden="true">❤️</span>
+      <span>Hoje</span>
+    </button>
+    <button type="button" data-vista="calendario" aria-controls="vista-calendario">
+      <span class="icone" aria-hidden="true">📅</span>
+      <span>Calendário</span>
+    </button>
+    <button type="button" data-vista="definicoes" aria-controls="vista-definicoes">
+      <span class="icone" aria-hidden="true">⚙️</span>
+      <span>Definições</span>
+    </button>
+  </nav>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-hidden="true"></div>
+
+  <dialog id="modal-importar" aria-labelledby="modal-titulo" aria-describedby="modal-texto">
+    <div class="modal-cartao">
+      <h2 id="modal-titulo">Substituir o diário?</h2>
+      <p id="modal-texto">A importação vai substituir os registos atualmente guardados neste dispositivo. Queres continuar?</p>
+      <div class="modal-acoes">
+        <button type="button" id="confirmar-importacao" class="botao-principal">Importar e substituir</button>
+        <button type="button" id="cancelar-importacao" class="botao-secundario">Cancelar</button>
+      </div>
+    </div>
+  </dialog>
+
+  <noscript>
+    <p class="aviso">Esta aplicação precisa de JavaScript para guardar os teus registos neste dispositivo.</p>
+  </noscript>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
