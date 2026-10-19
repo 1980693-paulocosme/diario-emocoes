@@ -7,13 +7,17 @@
  * funcionar quando o site está num subdiretório do GitHub Pages.
  */
 
-const CACHE = 'diario-emocoes-v1';
+const CACHE = 'diario-emocoes-v2';
 
 const RECURSOS = [
   './index.html',
   './style.css',
   './app.js',
   './storage.js',
+  './pdf.js',
+  './vendor/jspdf.umd.min.js',
+  './vendor/diario-sans-regular.js',
+  './vendor/diario-sans-bold.js',
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',

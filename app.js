@@ -40,12 +40,21 @@ const ui = {
   grelha: document.getElementById('grelha'),
   detalhe: document.getElementById('detalhe'),
   exportar: document.getElementById('exportar'),
+  abrirPdf: document.getElementById('abrir-pdf'),
   importar: document.getElementById('importar'),
   ficheiro: document.getElementById('ficheiro-importar'),
   toast: document.getElementById('toast'),
   modal: document.getElementById('modal-importar'),
   cancelarImportacao: document.getElementById('cancelar-importacao'),
   confirmarImportacao: document.getElementById('confirmar-importacao'),
+  modalPdf: document.getElementById('modal-pdf'),
+  periodosPdf: document.getElementById('periodos-pdf'),
+  periodoPersonalizado: document.getElementById('periodo-personalizado'),
+  pdfInicio: document.getElementById('pdf-inicio'),
+  pdfFim: document.getElementById('pdf-fim'),
+  mensagemPdf: document.getElementById('mensagem-pdf'),
+  gerarPdf: document.getElementById('gerar-pdf'),
+  cancelarPdf: document.getElementById('cancelar-pdf'),
   separadores: document.querySelectorAll('.barra-nav button'),
   vistas: document.querySelectorAll('.vista'),
 };
@@ -61,8 +70,12 @@ const estado = {
   diaSelecionado: hojeInicial,
   importacaoPendente: null,
   aGuardar: false,
+  aGerarPdf: false,
   temporizadorToast: 0,
 };
+
+let moduloPdf = null;
+let pedidoPdf = null;
 
 const chips = new Map();
 let registoSW = null;
@@ -107,6 +120,22 @@ function ligarEventos() {
   ui.mesAnterior.addEventListener('click', () => mudarMes(-1));
   ui.mesSeguinte.addEventListener('click', () => mudarMes(1));
   ui.exportar.addEventListener('click', aoExportar);
+  ui.abrirPdf.addEventListener('click', abrirModalPdf);
+  ui.periodosPdf.addEventListener('change', aoMudarPeriodo);
+  ui.gerarPdf.addEventListener('click', aoGerarPdf);
+  ui.cancelarPdf.addEventListener('click', fecharModalPdf);
+  ui.modalPdf.addEventListener('cancel', (evento) => {
+    evento.preventDefault();
+    fecharModalPdf();
+  });
+  ui.modalPdf.addEventListener('click', (evento) => {
+    if (evento.target === ui.modalPdf) {
+      fecharModalPdf();
+    }
+  });
+  ui.modalPdf.addEventListener('close', () => {
+    document.body.classList.remove('modal-aberto');
+  });
   ui.importar.addEventListener('click', () => ui.ficheiro.click());
   ui.ficheiro.addEventListener('change', aoEscolherFicheiro);
   ui.cancelarImportacao.addEventListener('click', cancelarImportacao);
@@ -146,6 +175,10 @@ function abrirSeparador(nome) {
 
   if (nome === 'calendario') {
     renderCalendario();
+  }
+
+  if (nome === 'definicoes') {
+    prepararPdf();
   }
 
   mostrarVista(nome, true);
@@ -471,7 +504,152 @@ function aoExportar() {
   partilharOuDescarregar(ficheiro, nome);
 }
 
-async function partilharOuDescarregar(ficheiro, nome) {
+function prepararPdf() {
+  if (moduloPdf || pedidoPdf) {
+    return;
+  }
+
+  pedidoPdf = Promise.all([import('./pdf.js'), carregarJsPdf()])
+    .then(([modulo]) => {
+      moduloPdf = modulo;
+      pedidoPdf = null;
+    })
+    .catch(() => {
+      pedidoPdf = null;
+    });
+}
+
+function carregarJsPdf() {
+  if (globalThis.jspdf && typeof globalThis.jspdf.jsPDF === 'function') {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve, reject) => {
+    const url = new URL('./vendor/jspdf.umd.min.js', import.meta.url).href;
+    const script = document.createElement('script');
+    script.src = url;
+    script.onload = () => {
+      if (globalThis.jspdf && typeof globalThis.jspdf.jsPDF === 'function') {
+        resolve();
+      } else {
+        reject(new Error('jspdf'));
+      }
+    };
+    script.onerror = () => reject(new Error('jspdf'));
+    document.head.append(script);
+  });
+}
+
+function abrirModalPdf() {
+  prepararPdf();
+  const hoje = dataLocalISO();
+  ui.pdfInicio.max = hoje;
+  ui.pdfFim.max = hoje;
+  ui.pdfInicio.value = adicionarDias(hoje, -29);
+  ui.pdfFim.value = hoje;
+  const trinta = ui.periodosPdf.querySelector('input[value="30"]');
+  if (trinta) {
+    trinta.checked = true;
+  }
+  ui.periodoPersonalizado.hidden = true;
+  definirMensagemPdf('');
+
+  try {
+    ui.modalPdf.showModal();
+    document.body.classList.add('modal-aberto');
+  } catch (erro) {
+    mostrarToast('Não foi possível abrir a escolha do período.', true);
+  }
+}
+
+function aoMudarPeriodo(evento) {
+  const opcao = evento.target && evento.target.value;
+  ui.periodoPersonalizado.hidden = opcao !== 'personalizado';
+  definirMensagemPdf('');
+}
+
+function fecharModalPdf() {
+  if (ui.modalPdf.open) {
+    ui.modalPdf.close();
+  }
+}
+
+function definirMensagemPdf(mensagem) {
+  ui.mensagemPdf.textContent = mensagem;
+  ui.mensagemPdf.hidden = mensagem === '';
+}
+
+function aoGerarPdf() {
+  if (estado.aGerarPdf) {
+    return;
+  }
+
+  if (!moduloPdf) {
+    prepararPdf();
+    definirMensagemPdf('O relatório ainda está a preparar-se. Tenta novamente dentro de um instante.');
+    return;
+  }
+
+  const escolhido = ui.periodosPdf.querySelector('input[name="periodo"]:checked');
+  const periodo = moduloPdf.resolverPeriodo({
+    opcao: escolhido ? escolhido.value : '',
+    inicio: ui.pdfInicio.value,
+    fim: ui.pdfFim.value,
+    hoje: dataLocalISO(),
+  });
+
+  if (!periodo.ok) {
+    definirMensagemPdf(periodo.erro);
+    return;
+  }
+
+  const leitura = lerRegistos();
+  if (!leitura.ok) {
+    definirMensagemPdf(leitura.erro);
+    return;
+  }
+
+  estado.aGerarPdf = true;
+  let resultado;
+  try {
+    resultado = moduloPdf.gerarRelatorioPdf({
+      registos: leitura.dados,
+      inicio: periodo.inicio,
+      fim: periodo.fim,
+    });
+  } catch (erro) {
+    definirMensagemPdf('Não foi possível criar o relatório PDF.');
+    return;
+  } finally {
+    estado.aGerarPdf = false;
+  }
+
+  if (!resultado.ok) {
+    definirMensagemPdf(resultado.erro);
+    return;
+  }
+
+  const nome = `diario-emocoes-${dataLocalISO()}.pdf`;
+  const blob = new Blob([resultado.bytes], { type: 'application/pdf' });
+  let ficheiro = blob;
+
+  try {
+    ficheiro = new File([blob], nome, { type: 'application/pdf' });
+  } catch (erro) {
+    ficheiro = blob;
+  }
+
+  fecharModalPdf();
+  partilharOuDescarregar(ficheiro, nome, 'Relatório PDF exportado.');
+}
+
+function adicionarDias(chave, dias) {
+  const data = dataDeChave(chave);
+  data.setDate(data.getDate() + dias);
+  return dataLocalISO(data);
+}
+
+async function partilharOuDescarregar(ficheiro, nome, mensagem = 'Diário exportado.') {
   if (navigator.canShare && navigator.canShare({ files: [ficheiro] })) {
     try {
       await navigator.share({ files: [ficheiro], title: 'Diário de Emoções' });
@@ -492,7 +670,7 @@ async function partilharOuDescarregar(ficheiro, nome) {
   link.click();
   link.remove();
   window.setTimeout(() => URL.revokeObjectURL(url), 1500);
-  mostrarToast('Diário exportado.');
+  mostrarToast(mensagem);
 }
 
 async function aoEscolherFicheiro() {

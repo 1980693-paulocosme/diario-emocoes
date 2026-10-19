@@ -99,8 +99,14 @@
 
       <section class="cartao definicao" aria-labelledby="titulo-exportar">
         <h2 id="titulo-exportar">Exportar dados</h2>
-        <p>Guarda uma cópia do diário num ficheiro JSON.</p>
-        <button type="button" id="exportar" class="botao-secundario">Exportar o meu diário</button>
+        <button type="button" id="abrir-pdf" class="opcao-exportar">
+          <span class="opcao-titulo">Exportar PDF</span>
+          <span class="opcao-descricao">Cria um relatório das tuas emoções para partilhar.</span>
+        </button>
+        <button type="button" id="exportar" class="opcao-exportar">
+          <span class="opcao-titulo">Exportar JSON</span>
+          <span class="opcao-descricao">Guarda uma cópia de segurança do teu diário.</span>
+        </button>
       </section>
 
       <section class="cartao definicao" aria-labelledby="titulo-importar">
@@ -113,7 +119,7 @@
       <section class="cartao definicao" aria-labelledby="titulo-info">
         <h2 id="titulo-info">Informação</h2>
         <p class="nome-app">Diário de Emoções</p>
-        <p class="versao">Versão 1.0</p>
+        <p class="versao">Versão 1.1</p>
         <p>Um espaço pessoal para reconhecer e guardar as emoções de cada dia.</p>
         <p class="nota-segura">Os teus registos são guardados apenas neste dispositivo. Exporta regularmente o teu diário para manteres uma cópia de segurança.</p>
       </section>
@@ -144,6 +150,47 @@
       <div class="modal-acoes">
         <button type="button" id="confirmar-importacao" class="botao-principal">Importar e substituir</button>
         <button type="button" id="cancelar-importacao" class="botao-secundario">Cancelar</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="modal-pdf" aria-labelledby="pdf-titulo" aria-describedby="pdf-texto">
+    <div class="modal-cartao">
+      <h2 id="pdf-titulo">Exportar relatório</h2>
+      <p id="pdf-texto">Escolhe o período que queres partilhar.</p>
+      <fieldset id="periodos-pdf" class="periodos">
+        <legend class="visualmente-oculto">Período do relatório</legend>
+        <label class="opcao-periodo">
+          <input type="radio" name="periodo" value="7">
+          <span>Últimos 7 dias</span>
+        </label>
+        <label class="opcao-periodo">
+          <input type="radio" name="periodo" value="30" checked>
+          <span>Últimos 30 dias</span>
+        </label>
+        <label class="opcao-periodo">
+          <input type="radio" name="periodo" value="tudo">
+          <span>Todo o histórico</span>
+        </label>
+        <label class="opcao-periodo">
+          <input type="radio" name="periodo" value="personalizado">
+          <span>Personalizado</span>
+        </label>
+      </fieldset>
+      <div id="periodo-personalizado" class="periodo-datas" hidden>
+        <label class="campo-data" for="pdf-inicio">
+          <span>Data inicial</span>
+          <input id="pdf-inicio" type="date" autocomplete="off">
+        </label>
+        <label class="campo-data" for="pdf-fim">
+          <span>Data final</span>
+          <input id="pdf-fim" type="date" autocomplete="off">
+        </label>
+      </div>
+      <p id="mensagem-pdf" class="mensagem-pdf" role="alert" hidden></p>
+      <div class="modal-acoes">
+        <button type="button" id="gerar-pdf" class="botao-principal">Gerar relatório PDF</button>
+        <button type="button" id="cancelar-pdf" class="botao-secundario">Cancelar</button>
       </div>
     </div>
   </dialog>
