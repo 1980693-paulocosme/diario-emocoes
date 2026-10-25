@@ -29,8 +29,7 @@ const ui = {
   bannerEdicao: document.getElementById('banner-edicao'),
   voltarHoje: document.getElementById('voltar-hoje'),
   pergunta: document.getElementById('pergunta'),
-  chipsPositivas: document.getElementById('chips-positivas'),
-  chipsDificeis: document.getElementById('chips-dificeis'),
+  chips: document.getElementById('chips'),
   notas: document.getElementById('notas'),
   mensagemGuardar: document.getElementById('mensagem-guardar'),
   guardar: document.getElementById('guardar'),
@@ -84,8 +83,7 @@ let jaTinhaControlador = Boolean(navigator.serviceWorker && navigator.serviceWor
 iniciar();
 
 function iniciar() {
-  criarChips(ui.chipsPositivas, EMOCOES_POSITIVAS);
-  criarChips(ui.chipsDificeis, EMOCOES_DIFICEIS);
+  criarChips(ui.chips, [...EMOCOES_POSITIVAS, ...EMOCOES_DIFICEIS]);
   ligarEventos();
   carregarFormulario(estado.dataEdicao);
   renderCalendario();
@@ -100,8 +98,7 @@ function ligarEventos() {
     });
   });
 
-  ui.chipsPositivas.addEventListener('click', alternarChip);
-  ui.chipsDificeis.addEventListener('click', alternarChip);
+  ui.chips.addEventListener('click', alternarChip);
   ui.notas.addEventListener('input', () => ajustarAltura(ui.notas));
   ui.notas.addEventListener('focus', () => {
     window.setTimeout(() => {
